@@ -13,7 +13,7 @@ cd DrStreet
 
 - Install dependencies
 ```
-npm install
+npm install / pnpm install (Recommend, please install the pnpm tool)
 ```
 
 - Compiles and hot-reloads for development
