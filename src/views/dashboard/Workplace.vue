@@ -1,63 +1,60 @@
 <template>
-  <page-header-wrapper>
-    <template v-slot:content>
-      <div class="page-header-content">
-        <div class="avatar">
-          <a-avatar size="large" :src="currentUser.avatar" />
-        </div>
-        <div class="content">
-          <div class="content-title">Hello, admin</div>
-          <div>.....</div>
-        </div>
-      </div>
-    </template>
-    <template v-slot:extraContent>
-      <div class="extra-content">
-        <div class="stat-item">
-          <a-statistic title="Beding analysis" :value="8" suffix="/ 24" />
-        </div>
-        <div class="stat-item">
-          <a-statistic title="Total analysis" :value="2223" />
-        </div>
-      </div>
-    </template>
+  <div>
+    <!-- Picture viewer -->
+    <a-drawer
+      title="Basic Drawer"
+      placement="bottom"
+      closable
+      height="100%"
+      :visible="visible"
+      @close="visible = false"
+    >
+    <img style="width: 100%" :src="projectDetailImg" />
+  </a-drawer>
 
-    <div>
-      <a-row :gutter="24">
-        <a-col :xl="24" :lg="24" :md="24" :sm="24" :xs="24">
-          <a-card
-            class="project-list"
-            :loading="loading"
-            style="margin-bottom: 24px;"
-            :bordered="false"
-            title="Detect history"
-            :body-style="{ padding: 0 }"
-          >
-            <a slot="extra">New analysis</a>
-            <div>
-              <a-card-grid class="project-card-grid" :key="i" v-for="(item, i) in projects">
+    <a-row :gutter="24">
+      <a-col :xl="24" :lg="24" :md="24" :sm="24" :xs="24">
+        <a-card
+          class="project-list"
+          :loading="loading"
+          :bordered="false"
+          title="Detect history"
+          :body-style="{ padding: 0 }"
+        >
+          <a slot="extra">
+            <a-upload
+              name="file"
+              :multiple="true"
+              :showUploadList="false"
+              :action="uploadUrl"
+              @change="handleChange"
+            >
+              <a-button>
+                New analysis
+              </a-button>
+            </a-upload>
+          </a>
+          <div>
+            <a-card-grid class="project-card-grid" :key="i" v-for="(item, i) in projects">
+              <a-spin :spinning="item.status" delay="500" @click="projectDetail(item)">
                 <a-card :bordered="false" :body-style="{ padding: 0 }">
                   <a-card-meta>
-                    <div slot="title" class="card-title">
-                      <a-avatar size="small" :src="item.cover" />
-                      <a>{{ item.title }}</a>
-                    </div>
                     <div slot="description" class="card-description" style="margin: 10px auto; height: 230px; text-align: center;">
-                      <img src="@/assets/logo.png" style="height: 100%" />
+                      <img :src="item.img" style="height: 100%" />
                     </div>
                   </a-card-meta>
-                  <div class="project-item">
+                  <!-- <div class="project-item">
                     <a href="/#/">科学搬砖组</a>
                     <span class="datetime">9小时前</span>
-                  </div>
+                  </div> -->
                 </a-card>
-              </a-card-grid>
-            </div>
-          </a-card>
-        </a-col>
-      </a-row>
-    </div>
-  </page-header-wrapper>
+              </a-spin>
+            </a-card-grid>
+          </div>
+        </a-card>
+      </a-col>
+    </a-row>
+  </div>
 </template>
 
 <script>
@@ -65,6 +62,7 @@ import { timeFix } from '@/utils/util'
 import { mapState } from 'vuex'
 import { PageHeaderWrapper } from '@ant-design-vue/pro-layout'
 import { Radar } from '@/components'
+import { message } from 'ant-design-vue'
 
 import { getRoleList, getServiceList } from '@/api/manage'
 
@@ -78,55 +76,14 @@ export default {
   },
   data () {
     return {
+      loading: true,
       timeFix: timeFix(),
+      visible: false,
       avatar: '',
       user: {},
-
       projects: [],
-      loading: true,
-      radarLoading: true,
-      activities: [],
-      teams: [],
-
-      // data
-      axis1Opts: {
-        dataKey: 'item',
-        line: null,
-        tickLine: null,
-        grid: {
-          lineStyle: {
-            lineDash: null
-          },
-          hideFirstLine: false
-        }
-      },
-      axis2Opts: {
-        dataKey: 'score',
-        line: null,
-        tickLine: null,
-        grid: {
-          type: 'polygon',
-          lineStyle: {
-            lineDash: null
-          }
-        }
-      },
-      scale: [
-        {
-          dataKey: 'score',
-          min: 0,
-          max: 80
-        }
-      ],
-      axisData: [
-        { item: '引用', a: 70, b: 30, c: 40 },
-        { item: '口碑', a: 60, b: 70, c: 40 },
-        { item: '产量', a: 50, b: 60, c: 40 },
-        { item: '贡献', a: 40, b: 50, c: 40 },
-        { item: '热度', a: 60, b: 70, c: 40 },
-        { item: '引用', a: 70, b: 50, c: 40 }
-      ],
-      radarData: []
+      uploadUrl: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
+      projectDetailImg: ''
     }
   },
   computed: {
@@ -134,12 +91,6 @@ export default {
       nickname: state => state.user.nickname,
       welcome: state => state.user.welcome
     }),
-    currentUser () {
-      return {
-        name: 'Serati Ma',
-        avatar: 'http://pic.headjia.com/02/1127105236241486.jpg'
-      }
-    },
     userInfo () {
       return this.$store.getters.userInfo
     }
@@ -163,6 +114,12 @@ export default {
     this.initRadar()
   },
   methods: {
+    projectDetail (item) {
+      if (item.status2) {
+        this.visible = true
+        this.projectDetailImg = item.url
+      }
+    },
     getProjects () {
       this.$http.get('/list/search/projects').then(res => {
         this.projects = res.result && res.result.data
@@ -194,6 +151,18 @@ export default {
         this.radarData = dv.rows
         this.radarLoading = false
       })
+    },
+    handleChange (info) {
+      if (info.file.status !== 'uploading') {
+        console.log(info.file, info.fileList)
+      }
+      if (info.file.status === 'done') {
+        message.success(`${info.file.name} file uploaded successfully`)
+        this.projects.push(0, 1)
+      } else if (info.file.status === 'error') {
+        this.projects.splice(0, 1)
+        message.error(`${info.file.name} file upload failed.`)
+      }
     }
   }
 }

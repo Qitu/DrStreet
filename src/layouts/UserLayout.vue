@@ -30,13 +30,9 @@
 
 <script>
 import { deviceMixin } from '@/store/device-mixin'
-import SelectLang from '@/components/SelectLang'
 
 export default {
   name: 'UserLayout',
-  components: {
-    SelectLang
-  },
   mixins: [deviceMixin],
   mounted () {
     document.body.classList.add('userLayout')
