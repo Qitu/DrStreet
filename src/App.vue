@@ -8,7 +8,6 @@
 
 <script>
 import { setDocumentTitle } from '@/utils/domUtil'
-import { i18nRender } from '@/locales'
 
 export default {
   data () {
@@ -18,7 +17,7 @@ export default {
   computed: {
     locale () {
       const { title } = this.$route.meta
-      title && (setDocumentTitle(`${i18nRender(title)}`))
+      title && (setDocumentTitle('Dr Street'))
       return this.$i18n.getLocaleMessage(this.$store.getters.lang).antLocale
     }
   }

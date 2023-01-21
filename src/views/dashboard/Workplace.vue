@@ -1,5 +1,13 @@
 <template>
   <div>
+    <a-card>
+      <a-col :span="12">
+        <a-statistic title="Total cases" :value="projects.length"/>
+      </a-col>
+      <a-col :span="12">
+        <a-statistic title="Open cases"/>
+      </a-col>
+    </a-card>
     <!-- Picture viewer -->
     <a-drawer
       :title="projectDetailInfo.name"
@@ -11,7 +19,7 @@
     >
     <img :key="i" v-for="(item, i) in projectDetailInfo.list" style="width: 100%; display: block; margin: 20px 0" :src="domain + item.result_image" />
     <!-- Data detail in table -->
-    <!-- <a-table bordered :pagination="false" :columns="columns" :data-source="data" /> -->
+    <a-table bordered :pagination="false" :columns="columns" :data-source="data" />
   </a-drawer>
 
     <a-row :gutter="24">
@@ -40,13 +48,16 @@
           </a>
           <div>
             <a-card-grid class="project-card-grid" :key="i" v-for="(item, i) in projects">
-              <a-spin :spinning="!item.uuid" :delay="500" @click="projectDetail(item)">
+              <a-spin :spinning="!item.uuid" :delay="500">
                 <a-card :bordered="false" :body-style="{ padding: 0 }">
-                  <a-card-meta>
-                    <div slot="description" class="card-description" style="margin: 10px auto; height: 230px; text-align: center;">
+                  <a-card-meta @click="projectDetail(item)">
+                    <div slot="description" class="card-description" style="margin: 10px auto 20px; height: 230px; text-align: center;">
                       <img v-if="item.results" :src="domain + item.results[0].result_image" style="height: 100%; background-color: rgba(0,0,0,0.1);" @load="imgResult" >
                     </div>
                   </a-card-meta>
+                  <a-select style="width: 160px" @change="updateStatus($event, item)">
+                    <a-select-option v-for="(status, i) in dataStatus" :key="i" v-mocel:value="status.id">{{ status.name }}</a-select-option>
+                  </a-select>
                   <div class="project-item">
                     <span class="datetime">{{ item.uuid }}</span>
                   </div>
@@ -106,6 +117,16 @@ export default {
           key: 'percentage_probability'
         }
       ],
+      dataStatus: [
+        {
+          id: 1,
+          name: 'Open'
+        },
+        {
+          id: 2,
+          name: 'Being review'
+        }
+      ],
       data: []
     }
   },
@@ -129,12 +150,15 @@ export default {
     imgResult (item) {
       item.loaded = true
     },
+    updateStatus (val, item) {
+      alert(val)
+    },
     projectDetail (item) {
       if (item.results) {
         this.visible = true
         this.projectDetailInfo.list = [...item.results]
         this.projectDetailInfo.name = item.uuid
-        this.data = item.results.detections
+        this.data = item.results[0].detections
       }
     },
     getProjects () {
