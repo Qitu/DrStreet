@@ -6,7 +6,6 @@
         <h1>{{ title }}</h1>
       </div>
     </template>
-
     <template v-slot:rightContentRender>
       <right-content :top-menu="settings.layout === 'topmenu'" :is-mobile="isMobile" :theme="settings.theme" />
     </template>
@@ -21,7 +20,7 @@
 <script>
 import { i18nRender } from '@/locales'
 import { mapState } from 'vuex'
-import { CONTENT_WIDTH_TYPE, SIDEBAR_TYPE, TOGGLE_MOBILE_TYPE } from '@/store/mutation-types'
+import { CONTENT_WIDTH_TYPE } from '@/store/mutation-types'
 
 import defaultSettings from '@/config/defaultSettings'
 import RightContent from '@/components/GlobalHeader/RightContent'
@@ -42,17 +41,12 @@ export default {
 
       // base
       menus: [],
-      // 侧栏收起状态
       collapsed: false,
       title: 'DrStreet',
       settings: {
-        // 布局类型
         layout: defaultSettings.layout, // 'sidemenu', 'topmenu'
-        // CONTENT_WIDTH_TYPE
         contentWidth: defaultSettings.layout === 'sidemenu' ? CONTENT_WIDTH_TYPE.Fluid : defaultSettings.contentWidth,
-        // 主题 'dark' | 'light'
         theme: defaultSettings.navTheme,
-        // 主色调
         primaryColor: defaultSettings.primaryColor,
         fixedHeader: defaultSettings.fixedHeader,
         fixSiderbar: defaultSettings.fixSiderbar,
@@ -61,29 +55,18 @@ export default {
         hideHintAlert: false,
         hideCopyButton: false
       },
-      // 媒体查询
       query: {},
-
-      // 是否手机模式
       isMobile: false
     }
   },
   computed: {
     ...mapState({
-      // 动态主路由
       mainMenu: state => state.permission.addRouters
     })
   },
   created () {
     const routes = this.mainMenu.find(item => item.path === '/')
     this.menus = (routes && routes.children) || []
-    // 处理侧栏收起状态
-    this.$watch('collapsed', () => {
-      this.$store.commit(SIDEBAR_TYPE, this.collapsed)
-    })
-    this.$watch('isMobile', () => {
-      this.$store.commit(TOGGLE_MOBILE_TYPE, this.isMobile)
-    })
   },
   mounted () {
     const userAgent = navigator.userAgent

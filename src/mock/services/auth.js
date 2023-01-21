@@ -1,4 +1,5 @@
 import Mock from 'mockjs2'
+import storage from 'store'
 import { builder, getBody } from '../util'
 
 const username = ['admin', 'super']
@@ -11,6 +12,8 @@ const login = (options) => {
   if (!username.includes(body.username) || !password.includes(body.password)) {
     return builder({ isLogin: true }, '账户或密码错误', 401)
   }
+  const tokenVal = 'Token 8ac6da706ef0c56fa01bdb2d9696abc04fe5ff10'
+  storage.set('Authorization', tokenVal)
 
   return builder({
     'id': Mock.mock('@guid'),
@@ -24,7 +27,7 @@ const login = (options) => {
     'deleted': 0,
     'roleId': 'admin',
     'lang': 'zh-CN',
-    'token': 'Token 8ac6da706ef0c56fa01bdb2d9696abc04fe5ff10'
+    'token': tokenVal
   }, '', 200, { 'Custom-Header': Mock.mock('@guid') })
 }
 

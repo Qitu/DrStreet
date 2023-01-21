@@ -42,7 +42,7 @@ const errorHandler = (error) => {
 
 // request interceptor (Auth)
 request.interceptors.request.use(config => {
-  const token = storage.get(ACCESS_TOKEN)
+  const token = 'Token 8ac6da706ef0c56fa01bdb2d9696abc04fe5ff10'
   if (token) {
     config.headers[ACCESS_TOKEN] = token
   }
