@@ -5,18 +5,17 @@ import notification from 'ant-design-vue/es/notification'
 import { VueAxios } from './axios'
 import { ACCESS_TOKEN } from '@/store/mutation-types'
 
-// 创建 axios 实例
+// Create axios instance
 const request = axios.create({
-  // API 请求的默认前缀
+  // API url prefix
   baseURL: process.env.VUE_APP_API_BASE_URL,
-  timeout: 6000 // 请求超时时间
+  timeout: 6000 // Timeout
 })
 
-// 异常拦截处理器
+// Exception controller
 const errorHandler = (error) => {
   if (error.response) {
     const data = error.response.data
-    // 从 localstorage 获取 token
     const token = storage.get(ACCESS_TOKEN)
     if (error.response.status === 403) {
       notification.error({
@@ -41,11 +40,9 @@ const errorHandler = (error) => {
   return Promise.reject(error)
 }
 
-// request interceptor
+// request interceptor (Auth)
 request.interceptors.request.use(config => {
   const token = storage.get(ACCESS_TOKEN)
-  // 如果 token 存在
-  // 让每个请求携带自定义 token 请根据实际情况自行修改
   if (token) {
     config.headers[ACCESS_TOKEN] = token
   }

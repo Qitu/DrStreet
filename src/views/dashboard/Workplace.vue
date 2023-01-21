@@ -2,14 +2,16 @@
   <div>
     <!-- Picture viewer -->
     <a-drawer
-      title="Basic Drawer"
+      :title="projectDetailInfo.name"
       placement="bottom"
       closable
       height="100%"
       :visible="visible"
       @close="visible = false"
     >
-    <img style="width: 100%" :src="projectDetailImg" />
+    <img style="width: 100%; display: block; margin: 20px 0" :src="projectDetailInfo.img" />
+    <!-- Data detail in table -->
+    <a-table bordered :pagination="false" :columns="columns" :data-source="data" />
   </a-drawer>
 
     <a-row :gutter="24">
@@ -27,6 +29,7 @@
               :multiple="true"
               :showUploadList="false"
               :action="uploadUrl"
+              :headers="headers"
               @change="handleChange"
             >
               <a-button>
@@ -36,17 +39,16 @@
           </a>
           <div>
             <a-card-grid class="project-card-grid" :key="i" v-for="(item, i) in projects">
-              <a-spin :spinning="item.status" delay="500" @click="projectDetail(item)">
+              <a-spin :spinning="!item.uuid" :delay="500" @click="projectDetail(item)">
                 <a-card :bordered="false" :body-style="{ padding: 0 }">
                   <a-card-meta>
                     <div slot="description" class="card-description" style="margin: 10px auto; height: 230px; text-align: center;">
-                      <img :src="item.img" style="height: 100%" />
+                      <img v-if="item.results" :src="domain + item.results.image" style="height: 100%;" @load="imgResult" >
                     </div>
                   </a-card-meta>
-                  <!-- <div class="project-item">
-                    <a href="/#/">科学搬砖组</a>
-                    <span class="datetime">9小时前</span>
-                  </div> -->
+                  <div class="project-item">
+                    <span class="datetime">{{ item.uuid }}</span>
+                  </div>
                 </a-card>
               </a-spin>
             </a-card-grid>
@@ -63,10 +65,9 @@ import { mapState } from 'vuex'
 import { PageHeaderWrapper } from '@ant-design-vue/pro-layout'
 import { Radar } from '@/components'
 import { message } from 'ant-design-vue'
-
-import { getRoleList, getServiceList } from '@/api/manage'
-
-const DataSet = require('@antv/data-set')
+import { getPredictResult } from '@/api/manage'
+import { ACCESS_TOKEN } from '@/store/mutation-types'
+import storage from 'store'
 
 export default {
   name: 'Workplace',
@@ -82,8 +83,29 @@ export default {
       avatar: '',
       user: {},
       projects: [],
-      uploadUrl: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
-      projectDetailImg: ''
+      uploadUrl: '/analysis',
+      headers: {
+        'Authorization': storage.get(ACCESS_TOKEN),
+        'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW'
+      },
+      projectDetailInfo: {
+        img: ''
+      },
+      domain: 'https://potholes-engine.taheralkamel.com',
+      columns: [
+        {
+          title: 'Name',
+          dataIndex: 'name',
+          key: 'name',
+          slots: { customRender: 'name' }
+        },
+        {
+          title: 'Probability (%)',
+          dataIndex: 'percentage_probability',
+          key: 'percentage_probability'
+        }
+      ],
+      data: []
     }
   },
   computed: {
@@ -98,58 +120,34 @@ export default {
   created () {
     this.user = this.userInfo
     this.avatar = this.userInfo.avatar
-
-    getRoleList().then(res => {
-      // console.log('workplace -> call getRoleList()', res)
-    })
-
-    getServiceList().then(res => {
-      // console.log('workplace -> call getServiceList()', res)
-    })
   },
   mounted () {
     this.getProjects()
-    this.getActivity()
-    this.getTeams()
-    this.initRadar()
   },
   methods: {
+    imgResult (item) {
+      item.loaded = true
+    },
     projectDetail (item) {
-      if (item.status2) {
+      if (item.results) {
         this.visible = true
-        this.projectDetailImg = item.url
+        this.projectDetailInfo.img = this.domain + item.results.result_image
+        this.projectDetailInfo.name = item.uuid
+        this.data = item.results.detections
       }
     },
     getProjects () {
-      this.$http.get('/list/search/projects').then(res => {
-        this.projects = res.result && res.result.data
-        this.loading = false
-      })
-    },
-    getActivity () {
-      this.$http.get('/workplace/activity').then(res => {
-        this.activities = res.result
-      })
-    },
-    getTeams () {
-      this.$http.get('/workplace/teams').then(res => {
-        this.teams = res.result
-      })
-    },
-    initRadar () {
-      this.radarLoading = true
-
-      this.$http.get('/workplace/radar').then(res => {
-        const dv = new DataSet.View().source(res.result)
-        dv.transform({
-          type: 'fold',
-          fields: ['个人', '团队', '部门'],
-          key: 'user',
-          value: 'score'
+      this.$http.get('/list/search/projects').then(() => {
+        getPredictResult().then(res => {
+          if (Array.isArray(res)) {
+            res.forEach((item) => {
+              item.results = item.results[0]
+            })
+            this.projects = res
+          }
+          console.log(res)
+          this.loading = false
         })
-
-        this.radarData = dv.rows
-        this.radarLoading = false
       })
     },
     handleChange (info) {
@@ -158,7 +156,7 @@ export default {
       }
       if (info.file.status === 'done') {
         message.success(`${info.file.name} file uploaded successfully`)
-        this.projects.push(0, 1)
+        this.projects.push(0, {})
       } else if (info.file.status === 'error') {
         this.projects.splice(0, 1)
         message.error(`${info.file.name} file upload failed.`)

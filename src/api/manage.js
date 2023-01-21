@@ -1,21 +1,15 @@
 import request from '@/utils/request'
 
 const api = {
-  user: '/user',
-  role: '/role',
-  service: '/service',
-  permission: '/permission',
-  permissionNoPager: '/permission/no-pager',
-  orgTree: '/org/tree'
+  management: '/analysis'
 }
 
 export default api
 
-export function getUserList (parameter) {
+export function getPredictResult () {
   return request({
-    url: api.user,
-    method: 'get',
-    params: parameter
+    url: api.management,
+    method: 'get'
   })
 }
 
