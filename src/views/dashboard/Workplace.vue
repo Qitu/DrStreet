@@ -9,9 +9,9 @@
       :visible="visible"
       @close="visible = false"
     >
-    <img style="width: 100%; display: block; margin: 20px 0" :src="projectDetailInfo.img" />
+    <img :key="i" v-for="(item, i) in projectDetailInfo.list" style="width: 100%; display: block; margin: 20px 0" :src="domain + item.result_image" />
     <!-- Data detail in table -->
-    <a-table bordered :pagination="false" :columns="columns" :data-source="data" />
+    <!-- <a-table bordered :pagination="false" :columns="columns" :data-source="data" /> -->
   </a-drawer>
 
     <a-row :gutter="24">
@@ -20,10 +20,11 @@
           class="project-list"
           :loading="loading"
           :bordered="false"
-          title="Detect history"
+          title="Analysis cases"
           :body-style="{ padding: 0 }"
         >
           <a slot="extra">
+            <a-button type="primary" style="margin-right: 10px" @click="getProjects" :disabled="loading">Refresh</a-button>
             <a-upload
               name="file"
               :multiple="true"
@@ -43,7 +44,7 @@
                 <a-card :bordered="false" :body-style="{ padding: 0 }">
                   <a-card-meta>
                     <div slot="description" class="card-description" style="margin: 10px auto; height: 230px; text-align: center;">
-                      <img v-if="item.results" :src="domain + item.results.image" style="height: 100%;" @load="imgResult" >
+                      <img v-if="item.results" :src="domain + item.results[0].result_image" style="height: 100%; background-color: rgba(0,0,0,0.1);" @load="imgResult" >
                     </div>
                   </a-card-meta>
                   <div class="project-item">
@@ -131,21 +132,18 @@ export default {
     projectDetail (item) {
       if (item.results) {
         this.visible = true
-        this.projectDetailInfo.img = this.domain + item.results.result_image
+        this.projectDetailInfo.list = [...item.results]
         this.projectDetailInfo.name = item.uuid
         this.data = item.results.detections
       }
     },
     getProjects () {
+      this.loading = true
       this.$http.get('/list/search/projects').then(() => {
         getPredictResult().then(res => {
           if (Array.isArray(res)) {
-            res.forEach((item) => {
-              item.results = item.results[0]
-            })
             this.projects = res
           }
-          console.log(res)
           this.loading = false
         })
       })
@@ -156,9 +154,8 @@ export default {
       }
       if (info.file.status === 'done') {
         message.success(`${info.file.name} file uploaded successfully`)
-        this.projects.push(0, {})
+        this.getProjects()
       } else if (info.file.status === 'error') {
-        this.projects.splice(0, 1)
         message.error(`${info.file.name} file upload failed.`)
       }
     }
