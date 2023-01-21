@@ -4,9 +4,6 @@
       <a-col :span="12">
         <a-statistic title="Total cases" :value="projects.length"/>
       </a-col>
-      <a-col :span="12">
-        <a-statistic title="Open cases"/>
-      </a-col>
     </a-card>
     <!-- Picture viewer -->
     <a-drawer
@@ -32,19 +29,7 @@
           :body-style="{ padding: 0 }"
         >
           <a slot="extra">
-            <a-button type="primary" style="margin-right: 10px" @click="getProjects" :disabled="loading">Refresh</a-button>
-            <a-upload
-              name="file"
-              :multiple="true"
-              :showUploadList="false"
-              :action="uploadUrl"
-              :headers="headers"
-              @change="handleChange"
-            >
-              <a-button>
-                New analysis
-              </a-button>
-            </a-upload>
+            <a-button type="primary" @click="getProjects" :disabled="loading">Refresh</a-button>
           </a>
           <div>
             <a-card-grid class="project-card-grid" :key="i" v-for="(item, i) in projects">
@@ -55,11 +40,10 @@
                       <img v-if="item.results" :src="domain + item.results[0].result_image" style="height: 100%; background-color: rgba(0,0,0,0.1);" @load="imgResult" >
                     </div>
                   </a-card-meta>
-                  <a-select style="width: 160px" @change="updateStatus($event, item)">
-                    <a-select-option v-for="(status, i) in dataStatus" :key="i" v-mocel:value="status.id">{{ status.name }}</a-select-option>
-                  </a-select>
+                  <a-tag color="#108ee9">{{ item.status }}</a-tag>
+                  <div style="margin-top: 15px">UUID: {{ item.uuid }}</div>
                   <div class="project-item">
-                    <span class="datetime">{{ item.uuid }}</span>
+                    <span class="datetime">Create: {{ new Date(item.created_at) }}</span>
                   </div>
                 </a-card>
               </a-spin>
@@ -77,7 +61,7 @@ import { mapState } from 'vuex'
 import { PageHeaderWrapper } from '@ant-design-vue/pro-layout'
 import { Radar } from '@/components'
 import { message } from 'ant-design-vue'
-import { getPredictResult } from '@/api/manage'
+import { getPredictResult, updatePredictStatus } from '@/api/manage'
 import { ACCESS_TOKEN } from '@/store/mutation-types'
 import storage from 'store'
 
@@ -89,6 +73,7 @@ export default {
   },
   data () {
     return {
+      filterStatus: '',
       loading: true,
       timeFix: timeFix(),
       visible: false,
@@ -107,9 +92,8 @@ export default {
       columns: [
         {
           title: 'Name',
-          dataIndex: 'name',
-          key: 'name',
-          slots: { customRender: 'name' }
+          dataIndex: 'id',
+          key: 'id'
         },
         {
           title: 'Probability (%)',
@@ -120,11 +104,27 @@ export default {
       dataStatus: [
         {
           id: 1,
-          name: 'Open'
+          name: 'NEW'
         },
         {
           id: 2,
-          name: 'Being review'
+          name: 'PREDICTED'
+        },
+        {
+          id: 3,
+          name: 'REVIEWED'
+        },
+        {
+          id: 4,
+          name: 'NO_POTHOLES'
+        },
+        {
+          id: 5,
+          name: 'NFAILEDEW'
+        },
+        {
+          id: 6,
+          name: 'FAILED'
         }
       ],
       data: []
@@ -151,25 +151,29 @@ export default {
       item.loaded = true
     },
     updateStatus (val, item) {
-      alert(val)
+      updatePredictStatus(item).then(res => {
+      })
     },
     projectDetail (item) {
       if (item.results) {
         this.visible = true
         this.projectDetailInfo.list = [...item.results]
         this.projectDetailInfo.name = item.uuid
-        this.data = item.results[0].detections
+        try {
+          item.results[0].detections.forEach((detection, i) => {
+            detection.id = detection.name + (i + 1)
+          })
+          this.data = item.results[0].detections
+        } catch (e) {}
       }
     },
-    getProjects () {
+    getProjects ($event = null) {
       this.loading = true
-      this.$http.get('/list/search/projects').then(() => {
-        getPredictResult().then(res => {
-          if (Array.isArray(res)) {
-            this.projects = res
-          }
-          this.loading = false
-        })
+      getPredictResult().then(res => {
+        if (Array.isArray(res)) {
+          this.projects = res
+        }
+        this.loading = false
       })
     },
     handleChange (info) {

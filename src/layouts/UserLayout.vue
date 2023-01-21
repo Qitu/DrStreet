@@ -6,7 +6,6 @@
         <div class="top">
           <div class="header">
             <a href="/">
-              <img src="~@/assets/logo.png" class="logo" alt="logo">
               <span class="title">Dr.Street</span>
             </a>
           </div>

@@ -2,8 +2,7 @@
   <pro-layout :i18nRender="i18nRender" v-bind="settings">
     <template v-slot:menuHeaderRender>
       <div>
-        <img style="border-radius: 8px;" src="@/assets/logo.png" />
-        <h1>{{ title }}</h1>
+        <img style="width: 88px; border-radius: 8px;" src="@/assets/logo.png" />
       </div>
     </template>
     <template v-slot:rightContentRender>

@@ -32,7 +32,7 @@ const login = (options) => {
 }
 
 const logout = () => {
-  return builder({}, '[测试接口] 注销成功')
+  return builder({}, '[info] logout success')
 }
 
 const smsCaptcha = () => {

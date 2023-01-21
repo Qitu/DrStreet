@@ -16,6 +16,7 @@ export default {
   'layout': 'topmenu',
   'contentWidth': 'Fixed',
   'theme': 'light',
+  'navTheme': 'light',
   'primaryColor': '#5DADE2',
   'fixedHeader': true,
   'fixSiderbar': false,
